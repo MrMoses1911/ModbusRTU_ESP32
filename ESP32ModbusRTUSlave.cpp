@@ -32,7 +32,6 @@ uint16_t ModbusRTUSlave::getRegister(uint16_t reg) {
 }
 
 void ModbusRTUSlave::handleRequest() {
-    static uint32_t lastCharTime = 0;
     if (_serial->available()) {
         uint8_t frame[256];
         uint8_t length = 0;
