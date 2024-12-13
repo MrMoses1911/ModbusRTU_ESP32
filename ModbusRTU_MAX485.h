@@ -1,14 +1,14 @@
-#ifndef ESP32ModbusRTUSlave_h
-#define ESP32ModbusRTUSlave_h
+#ifndef ModbusRTU_MAX485_h
+#define ModbusRTU_MAX485_h
 
 #include "Arduino.h"
 #include "HardwareSerial.h"
 
-class ModbusRTUSlave {
+class ModbusRTU_MAX485 {
     public:
-        ModbusRTUSlave(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin);
+        ModbusRTU_MAX485(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin);
 
-        void begin(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters);
+        void beginRTU(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters);
 
         void setRegister(uint16_t reg, uint16_t value);
         uint16_t getRegister(uint16_t reg);

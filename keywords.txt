@@ -1,0 +1,12 @@
+slaveRTU           KEYWORD1
+beginRTU           KEYWORD2
+setRegister        KEYWORD2
+getRegister        KEYWORD2
+handleRequest      KEYWORD2
+calculateCRC       KEYWORD2
+processFunction03  KEYWORD2
+processFunction06  KEYWORD2
+processFunction16  KEYWORD2
+sendException      KEYWORD2
+enableTransmit     KEYWORD2
+enableReceive      KEYWORD2

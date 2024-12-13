@@ -1,15 +1,15 @@
-#include "ESP32ModbusRTUSlave.h"
+#include "ModbusRTU_MAX485.h"
 
 // Modbus pinout configuration for MAX485 module
-ModbusRTUSlave::ModbusRTUSlave(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin)  :
+ModbusRTU_MAX485::ModbusRTU_MAX485(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin)  :
     _dePin(dePin), 
     _rePin(rePin), 
-    _serial(&Serial2), 
+    _serial(&Serial2),  
     _rxPin(rxPin), 
     _txPin(txPin) {}
 
 // Modbus initialzation 
-void ModbusRTUSlave::begin(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters) {
+void ModbusRTU_MAX485::beginRTU(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters) {
     _config = config;
     _slaveID = slaveID;
     _numRegisters = numRegisters;
@@ -26,7 +26,7 @@ void ModbusRTUSlave::begin(uint32_t baudRate, SerialConfig config, uint8_t slave
 }
 
 // Calculation necessary to ensure the correct character delay during modbus packets
-uint8_t ModbusRTUSlave::calculateBitsPerCharacter(SerialConfig config) {
+uint8_t ModbusRTU_MAX485::calculateBitsPerCharacter(SerialConfig config) {
     uint8_t bits = 1;
 
     switch (config) {
@@ -78,19 +78,19 @@ uint8_t ModbusRTUSlave::calculateBitsPerCharacter(SerialConfig config) {
 }
 
 // function for sending data on the protocol
-void ModbusRTUSlave::setRegister(uint16_t reg, uint16_t value) {
+void ModbusRTU_MAX485::setRegister(uint16_t reg, uint16_t value) {
     if (reg < _numRegisters) {
         _registers[reg] = value;
     }
 }
 
 // function for receiving data on the protocol
-uint16_t ModbusRTUSlave::getRegister(uint16_t reg) {
+uint16_t ModbusRTU_MAX485::getRegister(uint16_t reg) {
     return (reg < _numRegisters) ? _registers[reg] : 0;
 }
 
 // function that handles master's requests
-void ModbusRTUSlave::handleRequest() {
+void ModbusRTU_MAX485::handleRequest() {
     if (_serial->available()) {
         uint8_t frame[256];
         uint8_t length = 0;
@@ -122,19 +122,19 @@ void ModbusRTUSlave::handleRequest() {
 }
 
 // function that enables the TX mode of the MAX485 module
-void ModbusRTUSlave::enableTransmit() {
+void ModbusRTU_MAX485::enableTransmit() {
     digitalWrite(_dePin, HIGH);
     digitalWrite(_rePin, HIGH);
 }
 
 // function that enables the RX mode of the MAX485 module
-void ModbusRTUSlave::enableReceive() {
+void ModbusRTU_MAX485::enableReceive() {
     digitalWrite(_dePin, LOW);
     digitalWrite(_rePin, LOW);
 }
 
 // function that calculates the CRC validation
-uint16_t ModbusRTUSlave::calculateCRC(uint8_t *buffer, uint8_t length) {
+uint16_t ModbusRTU_MAX485::calculateCRC(uint8_t *buffer, uint8_t length) {
     uint16_t crc = 0xFFFF;
     for (uint8_t i = 0; i < length; i++) {
         crc ^= buffer[i];
@@ -151,7 +151,7 @@ uint16_t ModbusRTUSlave::calculateCRC(uint8_t *buffer, uint8_t length) {
 }   
 
 // function that handles an exception request coming from the master
-void ModbusRTUSlave::sendException(uint8_t functionCode, uint8_t exceptionCode) {
+void ModbusRTU_MAX485::sendException(uint8_t functionCode, uint8_t exceptionCode) {
     uint8_t response[5];
     response[0] = _slaveID;
     response[1] = functionCode | 0x80;
@@ -168,7 +168,7 @@ void ModbusRTUSlave::sendException(uint8_t functionCode, uint8_t exceptionCode) 
 }
 
 // Modbus 03 Function handler
-void ModbusRTUSlave::processFunction03(uint8_t *frame, uint8_t length) {
+void ModbusRTU_MAX485::processFunction03(uint8_t *frame, uint8_t length) {
     uint16_t startAddress = (frame[2] << 8) | frame[3];
     uint16_t quantity = (frame[4] << 8) | frame[5];
 
@@ -197,7 +197,7 @@ void ModbusRTUSlave::processFunction03(uint8_t *frame, uint8_t length) {
 }
 
 // Modbus 06 Function handler
-void ModbusRTUSlave::processFunction06(uint8_t *frame, uint8_t length) {
+void ModbusRTU_MAX485::processFunction06(uint8_t *frame, uint8_t length) {
     uint16_t address = (frame[2] << 8) | frame[3];
     uint16_t value = (frame[4] << 8) | frame[5];
 
@@ -214,7 +214,7 @@ void ModbusRTUSlave::processFunction06(uint8_t *frame, uint8_t length) {
 }
 
 // Modbus 16 Function handler
-void ModbusRTUSlave::processFunction16(uint8_t *frame, uint8_t length) {
+void ModbusRTU_MAX485::processFunction16(uint8_t *frame, uint8_t length) {
     uint16_t startAddress = (frame[2] << 8) | frame[3];
     uint16_t quantity = (frame[4] << 8) | frame[5];
     uint8_t byteCount = frame[6];
