@@ -12,13 +12,66 @@ void ModbusRTUSlave::begin(uint32_t baudRate, SerialConfig config, uint8_t slave
     _slaveID = slaveID;
     _numRegisters = numRegisters;
     _registers = new uint16_t[numRegisters]();
-    _charTimeout = (11 * 1000000) / baudRate; // 1 caractere = 11 bits
+
+    uint8_t bitsPerCharacter = calculateBitsPerCharacter(_config);
+    _charTimeout = (bitsPerCharacter * 1000000) / baudRate;
 
     pinMode(_dePin, OUTPUT);
     pinMode(_rePin, OUTPUT);
 
     _serial->begin(baudRate, config, _rxPin, _txPin);
     enableReceive();
+}
+
+uint8_t ModbusRTUSlave::calculateBitsPerCharacter(SerialConfig config) {
+    uint8_t bits = 1;
+
+    switch (config) {
+        case SERIAL_5N1: bits += 5; break; 
+        case SERIAL_5N2: bits += 5; break; 
+        case SERIAL_5E1: bits += 5; break; 
+        case SERIAL_5E2: bits += 5; break; 
+        case SERIAL_5O1: bits += 5; break; 
+        case SERIAL_5O2: bits += 5; break;
+
+        case SERIAL_6N1: bits += 6; break;
+        case SERIAL_6N2: bits += 6; break; 
+        case SERIAL_6E1: bits += 6; break; 
+        case SERIAL_6E2: bits += 6; break; 
+        case SERIAL_6O1: bits += 6; break; 
+        case SERIAL_6O2: bits += 6; break;
+
+        case SERIAL_7N1: bits += 7; break;
+        case SERIAL_7N2: bits += 7; break;
+        case SERIAL_7E1: bits += 7; break;
+        case SERIAL_7E2: bits += 7; break; 
+        case SERIAL_7O1: bits += 7; break;
+        case SERIAL_7O2: bits += 7; break;
+
+        case SERIAL_8N1: bits += 8; break; 
+        case SERIAL_8N2: bits += 8; break; 
+        case SERIAL_8E1: bits += 8; break; 
+        case SERIAL_8E2: bits += 8; break; 
+        case SERIAL_8O1: bits += 8; break; 
+        case SERIAL_8O2: bits += 8; break;
+    }
+
+    if (config == SERIAL_5E1 || config == SERIAL_5E2 || config == SERIAL_5O1 || config == SERIAL_5O2 ||
+        config == SERIAL_6E1 || config == SERIAL_6E2 || config == SERIAL_6O1 || config == SERIAL_6O2 ||
+        config == SERIAL_7E1 || config == SERIAL_7E2 || config == SERIAL_7O1 || config == SERIAL_7O2 ||
+        config == SERIAL_8E1 || config == SERIAL_8E2 || config == SERIAL_8O1 || config == SERIAL_8O2) {
+        bits += 1;
+    }
+
+    if (config == SERIAL_5N2 || config == SERIAL_6N2 || config == SERIAL_7N2 || config == SERIAL_8N2 ||
+        config == SERIAL_5E2 || config == SERIAL_6E2 || config == SERIAL_7E2 || config == SERIAL_8E2 ||
+        config == SERIAL_5O2 || config == SERIAL_6O2 || config == SERIAL_7O2 || config == SERIAL_8O2) {
+        bits += 2;
+    } else {
+        bits += 1;
+    }
+
+    return bits;
 }
 
 void ModbusRTUSlave::setRegister(uint16_t reg, uint16_t value) {
@@ -38,7 +91,7 @@ void ModbusRTUSlave::handleRequest() {
 
         while (_serial->available()) {
             frame[length++] = _serial->read();
-            delayMicroseconds(_charTimeout); // Garante fluxo contínuo
+            delayMicroseconds(_charTimeout);
         }
 
         uint16_t receivedCRC = frame[length - 2] | (frame[length - 1] << 8);
@@ -52,8 +105,11 @@ void ModbusRTUSlave::handleRequest() {
                 case 0x06:
                     processFunction06(frame, length);
                     break;
+                case 0x10:
+                    processFunction16(frame, length);
+                    break;                   
                 default:
-                    sendException(frame[1], 0x01); // Função inválida
+                    sendException(frame[1], 0x01);
             }
         }
     }
@@ -83,7 +139,7 @@ uint16_t ModbusRTUSlave::calculateCRC(uint8_t *buffer, uint8_t length) {
         }
     }
     return crc;
-}
+}   
 
 void ModbusRTUSlave::sendException(uint8_t functionCode, uint8_t exceptionCode) {
     uint8_t response[5];
@@ -125,7 +181,7 @@ void ModbusRTUSlave::processFunction03(uint8_t *frame, uint8_t length) {
         _serial->flush();
         enableReceive();
     } else {
-        sendException(0x03, 0x02); // Endereço inválido
+        sendException(0x03, 0x02);
     }
 }
 
@@ -137,10 +193,42 @@ void ModbusRTUSlave::processFunction06(uint8_t *frame, uint8_t length) {
         _registers[address] = value;
 
         enableTransmit();
-        _serial->write(frame, length); // Ecoa a requisição como resposta
+        _serial->write(frame, length);
         _serial->flush();
         enableReceive();
     } else {
-        sendException(0x06, 0x02); // Endereço inválido
+        sendException(0x06, 0x02);
     }
+}
+
+void ModbusRTUSlave::processFunction16(uint8_t *frame, uint8_t length) {
+    uint16_t startAddress = (frame[2] << 8) | frame[3];
+    uint16_t quantity = (frame[4] << 8) | frame[5];
+    uint8_t byteCount = frame[6];
+
+    if (startAddress + quantity > _numRegisters || byteCount != quantity * 2) {
+        sendException(0x10, 0x02);
+        return;
+    }
+
+    for (uint16_t i = 0; i < quantity; i++) {
+        _registers[startAddress + i] = (frame[7 + i * 2] << 8) | frame[8 + i * 2];
+    }
+
+    uint8_t response[8];
+    response[0] = _slaveID; 
+    response[1] = 0x10;    
+    response[2] = frame[2];
+    response[3] = frame[3];
+    response[4] = frame[4];
+    response[5] = frame[5];
+
+    uint16_t crc = calculateCRC(response, 6);
+    response[6] = crc & 0xFF;
+    response[7] = (crc >> 8) & 0xFF;
+
+    enableTransmit();
+    _serial->write(response, 8);
+    _serial->flush();
+    enableReceive();
 }
