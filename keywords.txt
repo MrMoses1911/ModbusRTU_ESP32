@@ -1,4 +1,4 @@
-slaveRTU           KEYWORD1
+ModbusRTU_MAX485   KEYWORD1
 beginRTU           KEYWORD2
 setRegister        KEYWORD2
 getRegister        KEYWORD2
