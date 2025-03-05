@@ -8,7 +8,7 @@ ModbusRTU_MAX485::ModbusRTU_MAX485(uint8_t dePin, uint8_t rePin, uint8_t rxPin, 
     _rxPin(rxPin), 
     _txPin(txPin) {}
 
-// Modbus initialzation 
+// Modbus initialization 
 void ModbusRTU_MAX485::beginRTU(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters) {
     _config = config;
     _slaveID = slaveID;
@@ -16,7 +16,7 @@ void ModbusRTU_MAX485::beginRTU(uint32_t baudRate, SerialConfig config, uint8_t 
     _registers = new uint16_t[numRegisters]();
 
     uint8_t bitsPerCharacter = calculateBitsPerCharacter(_config);
-    _charTimeout = (bitsPerCharacter * 1000000) / baudRate;
+    _charTimeout = (bitsPerCharacter * 1000000UL) / baudRate;
 
     pinMode(_dePin, OUTPUT);
     pinMode(_rePin, OUTPUT);
@@ -27,51 +27,36 @@ void ModbusRTU_MAX485::beginRTU(uint32_t baudRate, SerialConfig config, uint8_t 
 
 // Calculation necessary to ensure the correct character delay during modbus packets
 uint8_t ModbusRTU_MAX485::calculateBitsPerCharacter(SerialConfig config) {
-    uint8_t bits = 1;
+    uint8_t bits = 1; // Start bit
 
     switch (config) {
-        case SERIAL_5N1: bits += 5; break; 
-        case SERIAL_5N2: bits += 5; break; 
-        case SERIAL_5E1: bits += 5; break; 
-        case SERIAL_5E2: bits += 5; break; 
-        case SERIAL_5O1: bits += 5; break; 
-        case SERIAL_5O2: bits += 5; break;
-
-        case SERIAL_6N1: bits += 6; break;
-        case SERIAL_6N2: bits += 6; break; 
-        case SERIAL_6E1: bits += 6; break; 
-        case SERIAL_6E2: bits += 6; break; 
-        case SERIAL_6O1: bits += 6; break; 
-        case SERIAL_6O2: bits += 6; break;
-
-        case SERIAL_7N1: bits += 7; break;
-        case SERIAL_7N2: bits += 7; break;
-        case SERIAL_7E1: bits += 7; break;
-        case SERIAL_7E2: bits += 7; break; 
-        case SERIAL_7O1: bits += 7; break;
-        case SERIAL_7O2: bits += 7; break;
-
-        case SERIAL_8N1: bits += 8; break; 
-        case SERIAL_8N2: bits += 8; break; 
-        case SERIAL_8E1: bits += 8; break; 
-        case SERIAL_8E2: bits += 8; break; 
-        case SERIAL_8O1: bits += 8; break; 
-        case SERIAL_8O2: bits += 8; break;
+        case SERIAL_5N1: bits += 5; break; case SERIAL_5N2: bits += 5; break; 
+        case SERIAL_5E1: bits += 5; break; case SERIAL_5E2: bits += 5; break;
+        case SERIAL_5O1: bits += 5; break; case SERIAL_5O2: bits += 5; break;
+        case SERIAL_6N1: bits += 6; break; case SERIAL_6N2: bits += 6; break;
+        case SERIAL_6E1: bits += 6; break; case SERIAL_6E2: bits += 6; break;
+        case SERIAL_6O1: bits += 6; break; case SERIAL_6O2: bits += 6; break;
+        case SERIAL_7N1: bits += 7; break; case SERIAL_7N2: bits += 7; break;
+        case SERIAL_7E1: bits += 7; break; case SERIAL_7E2: bits += 7; break;
+        case SERIAL_7O1: bits += 7; break; case SERIAL_7O2: bits += 7; break;
+        case SERIAL_8N1: bits += 8; break; case SERIAL_8N2: bits += 8; break;
+        case SERIAL_8E1: bits += 8; break; case SERIAL_8E2: bits += 8; break;
+        case SERIAL_8O1: bits += 8; break; case SERIAL_8O2: bits += 8; break;
     }
 
     if (config == SERIAL_5E1 || config == SERIAL_5E2 || config == SERIAL_5O1 || config == SERIAL_5O2 ||
         config == SERIAL_6E1 || config == SERIAL_6E2 || config == SERIAL_6O1 || config == SERIAL_6O2 ||
         config == SERIAL_7E1 || config == SERIAL_7E2 || config == SERIAL_7O1 || config == SERIAL_7O2 ||
         config == SERIAL_8E1 || config == SERIAL_8E2 || config == SERIAL_8O1 || config == SERIAL_8O2) {
-        bits += 1;
+        bits += 1; // Parity bit
     }
 
     if (config == SERIAL_5N2 || config == SERIAL_6N2 || config == SERIAL_7N2 || config == SERIAL_8N2 ||
         config == SERIAL_5E2 || config == SERIAL_6E2 || config == SERIAL_7E2 || config == SERIAL_8E2 ||
         config == SERIAL_5O2 || config == SERIAL_6O2 || config == SERIAL_7O2 || config == SERIAL_8O2) {
-        bits += 2;
+        bits += 2; // Two stop bits
     } else {
-        bits += 1;
+        bits += 1; // One stop bit
     }
 
     return bits;
@@ -148,7 +133,7 @@ uint16_t ModbusRTU_MAX485::calculateCRC(uint8_t *buffer, uint8_t length) {
         }
     }
     return crc;
-}   
+}
 
 // function that handles an exception request coming from the master
 void ModbusRTU_MAX485::sendException(uint8_t functionCode, uint8_t exceptionCode) {
