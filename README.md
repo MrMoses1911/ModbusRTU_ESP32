@@ -40,19 +40,19 @@ ModbusRTU_ESP32 modbus(GPIO_NUM_47, GPIO_NUM_48, GPIO_NUM_33, GPIO_NUM_34);
 uint16_t readData, writeData;
 
 void setup() {
-	//baudrate, bit configuration, slave id, number of registers
+    //baudrate, bit configuration, slave id, number of registers
     modbus.beginRTU(9600, SERIAL_8E1, 1, 2);
 }
 
 void loop() {
-	//Updates the Modbus communication
+    //Updates the Modbus communication
     modbus.handleRequest();
 
-	//Set the register 0 with the "writeData" value
-	writeData = 155;
+    //Set the register 0 with the "writeData" value
+    writeData = 155;
     modbus.setRegister(0, writeData);
 
-	//Read the register 1 value and stores it in the readData variable
+    //Read the register 1 value and store it in the readData variable
     readData = modbus.getRegister(1);
 }
 ```
