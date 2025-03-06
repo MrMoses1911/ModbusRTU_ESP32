@@ -37,20 +37,23 @@ Restart the Arduino IDE to apply changes.
 
 ModbusRTU_ESP32 modbus(GPIO_NUM_47, GPIO_NUM_48, GPIO_NUM_33, GPIO_NUM_34);
 
-uint16_t rValue;
+uint16_t readData, writeData;
 
 void setup() {
-    Serial.begin(115200);
-
-    modbus.beginRTU(9600, SERIAL_8E1, 1, 3);
+	//baudrate, bit configuration, slave id, number of registers
+    modbus.beginRTU(9600, SERIAL_8E1, 1, 2);
 }
 
 void loop() {
+	//Updates de Modbus communication
     modbus.handleRequest();
 
-    modbus.setRegister(0, 254);
+	//Set the register 0 with the "writeData" value
+	writeData = 155;
+    modbus.setRegister(0, writeData);
 
-    rValue = modbus.getRegister(0);
+	//Read the register 1 value and stores it in the readData variable
+    readData = modbus.getRegister(1);
 }
 ```
 
