@@ -30,7 +30,7 @@ Copy the folder ModbusRTU_ESP32 to your Arduino libraries directory:
 Restart the Arduino IDE to apply changes.
 
 ## Basic Usage
-*The Modbus communication was tested using a WAGO Compact Controller 100 PLC as a master device.*
+*The Modbus communication was tested using a **WAGO Compact Controller 100** plc as a master device.*
 
 ```cpp
 #include <ModbusRTU_ESP32.h>

@@ -1,7 +1,7 @@
-#include <ModbusRTU_MAX485.h>
+#include <ModbusRTU_ESP32.h>
 
 // DE, RE, RX, TX pins
-ModbusRTU_MAX485 modbus(GPIO_NUM_47, GPIO_NUM_48, GPIO_NUM_33, GPIO_NUM_34);
+ModbusRTU_ESP32 modbus(GPIO_NUM_47, GPIO_NUM_48, GPIO_NUM_33, GPIO_NUM_34);
 
 uint16_t rValue1, rValue2, rValue3;
 uint64_t lastMillis;
