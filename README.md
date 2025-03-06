@@ -45,7 +45,7 @@ void setup() {
 }
 
 void loop() {
-	//Updates de Modbus communication
+	//Updates the Modbus communication
     modbus.handleRequest();
 
 	//Set the register 0 with the "writeData" value
