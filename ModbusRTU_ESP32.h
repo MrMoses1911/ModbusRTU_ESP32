@@ -1,12 +1,12 @@
-#ifndef ModbusRTU_MAX485_h
-#define ModbusRTU_MAX485_h
+#ifndef ModbusRTU_ESP32_h
+#define ModbusRTU_ESP32_h
 
 #include "Arduino.h"
 #include "HardwareSerial.h"
 
-class ModbusRTU_MAX485 {
+class ModbusRTU_ESP32 {
     public:
-        ModbusRTU_MAX485(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin);
+        ModbusRTU_ESP32(uint8_t dePin, uint8_t rePin, uint8_t rxPin, uint8_t txPin);
 
         void beginRTU(uint32_t baudRate, SerialConfig config, uint8_t slaveID, uint16_t numRegisters);
 
